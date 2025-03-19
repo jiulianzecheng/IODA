@@ -1,16 +1,4 @@
 #include "ftl.h"
-#include <queue>
-#include <vector>
-#include <functional>
-
-//@added
-struct ComparePriority {
-    bool operator()(NvmeRequest* const& req1, NvmeRequest* const& req2) {
-        // 优先级高的请求优先执行
-        return req1->nvm_usrflag > req2->nvm_usrflag;
-    }
-};
-std::priority_queue<NvmeRequest*, std::vector<NvmeRequest*>, ComparePriority> io_queue;
 
 //#define FEMU_DEBUG_FTL
 
@@ -783,10 +771,6 @@ static int do_gc(struct ssd *ssd, bool force)
 
 static uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
 {
-    //@added
-    // io_queue.push(req);
-    // req = io_queue.top();
-    // io_queue.pop();
 
     struct ssdparams *spp = &ssd->sp;
     uint64_t lba = req->slba;
