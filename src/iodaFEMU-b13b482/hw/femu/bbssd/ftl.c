@@ -1,6 +1,20 @@
 #include "ftl.h"
+#include <queue>
+#include <vector>
+#include <functional>
+
+//@added
+struct ComparePriority {
+    bool operator()(NvmeRequest* const& req1, NvmeRequest* const& req2) {
+        // 优先级高的请求优先执行
+        return req1->nvm_usrflag > req2->nvm_usrflag;
+    }
+};
+std::priority_queue<NvmeRequest*, std::vector<NvmeRequest*>, ComparePriority> io_queue;
 
 //#define FEMU_DEBUG_FTL
+
+
 
 static void *ftl_thread(void *arg);
 
@@ -769,6 +783,11 @@ static int do_gc(struct ssd *ssd, bool force)
 
 static uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
 {
+    //@added
+    // io_queue.push(req);
+    // req = io_queue.top();
+    // io_queue.pop();
+
     struct ssdparams *spp = &ssd->sp;
     uint64_t lba = req->slba;
     int nsecs = req->nlb;
@@ -781,6 +800,10 @@ static uint64_t ssd_read(struct ssd *ssd, NvmeRequest *req)
     if (end_lpn >= spp->tt_pgs) {
         ftl_err("start_lpn=%"PRIu64",tt_pgs=%d\n", start_lpn, ssd->sp.tt_pgs);
     }
+
+    //@added
+    // req->nvm_usrflag = req->nvm_usrflag  * 2;
+    // femu_log("usr_flag in here is %d\n", req->nvm_usrflag);
 
     /* normal IO read path */
     for (lpn = start_lpn; lpn <= end_lpn; lpn++) {

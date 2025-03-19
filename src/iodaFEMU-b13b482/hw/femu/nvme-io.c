@@ -68,6 +68,10 @@ static void nvme_process_sq_io(void *opaque, int index_poller)
         req->cmd_opcode = cmd.opcode;
         memcpy(&req->cmd, &cmd, sizeof(NvmeCmd));
 
+        //@added
+        femu_log("rsvd2: %d\n", ((NvmeRwCmd *)&cmd)->rsvd2);
+        req->nvm_usrflag = ((NvmeRwCmd *)&cmd)->rsvd2;
+
         if (n->print_log) {
             femu_debug("%s,cid:%d\n", __func__, cmd.cid);
         }
@@ -101,6 +105,9 @@ static void nvme_post_cqe(NvmeCQueue *cq, NvmeRequest *req)
     NvmeCqe *cqe = &req->cqe;
     uint8_t phase = cq->phase;
     hwaddr addr;
+
+    //@added
+    cqe->res64 = req->nvm_usrflag;
 
     if (n->print_log) {
         femu_debug("%s,req,lba:%lu,lat:%lu\n", n->devname, req->slba, req->reqlat);
